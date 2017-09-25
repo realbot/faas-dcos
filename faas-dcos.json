@@ -1,0 +1,183 @@
+{
+  "id": "/faas",
+  "groups": [
+    {
+      "id": "/faas/monitoring",    
+      "apps": [
+        {
+          "id": "/faas/monitoring/prometheus",
+          "cmd": "prometheus -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000 --alertmanager.url=http://faas-alertmanager.marathon.l4lb.thisdcos.directory:9093",
+          "instances": 1,
+          "cpus": 0.5,
+          "mem": 1024,
+          "container": {
+            "type": "DOCKER",
+            "volumes": [],
+            "docker": {
+              "image": "realbot/prometheus",
+              "network": "BRIDGE",
+              "portMappings": [
+                  {
+                    "containerPort": 9090,
+                    "hostPort": 0,
+                    "servicePort": 0,
+                    "protocol": "tcp",
+                    "name": "faas-prometheus",
+                    "labels": {
+                      "VIP_0": "/faas-prometheus:9090"
+                    }
+                  }
+              ],
+              "privileged": false,
+              "parameters": [],
+              "forcePullImage": true
+            }
+          },
+          "healthChecks": [
+            {
+              "path": "/api/v1/query?query=prometheus_build_info",
+              "portIndex": 0,
+              "protocol": "HTTP",
+              "timeoutSeconds": 10,
+              "gracePeriodSeconds": 10,
+              "intervalSeconds": 2,
+              "maxConsecutiveFailures": 10
+            }
+          ]
+        },
+        {
+          "id": "/faas/monitoring/alertmanager",
+          "cmd": "/bin/alertmanager -config.file=/alertmanager.yml -storage.path=/alertmanager",
+          "instances": 1,
+          "cpus": 0.5,
+          "mem": 128,
+          "container": {
+            "type": "DOCKER",
+            "volumes": [],
+            "docker": {
+              "image": "realbot/alertmanager",
+              "network": "BRIDGE",
+              "portMappings": [
+                  {
+                    "containerPort": 9093,
+                    "hostPort": 0,
+                    "servicePort": 0,
+                    "protocol": "tcp",
+                    "name": "faas-alertmanager",
+                    "labels": {
+                      "VIP_0": "/faas-alertmanager:9093"
+                    }
+                  }
+              ],
+              "privileged": false,
+              "parameters": [],
+              "forcePullImage": true
+            }
+          },
+          "healthChecks": [
+            {
+              "path": "/api/v1/status",
+              "portIndex": 0,
+              "protocol": "HTTP",
+              "timeoutSeconds": 10,
+              "gracePeriodSeconds": 10,
+              "intervalSeconds": 2,
+              "maxConsecutiveFailures": 10
+            }
+          ]          
+        }        
+      ]
+    },
+    {
+      "id": "/faas/core",
+      "dependencies": ["/faas/monitoring"],
+      "apps": [
+        {
+          "id": "/faas/core/gateway",
+          "instances": 1,
+          "cpus": 0.5,
+          "mem": 128,
+          "container": {
+              "type": "DOCKER",
+              "volumes": [],
+              "docker": {
+                "image": "functions/gateway:0.6.5",
+                "network": "BRIDGE",
+                "portMappings": [
+                    {
+                        "containerPort": 8080,
+                        "hostPort": 0,
+                        "servicePort": 10012,
+                        "protocol": "tcp",
+                        "name": "faas-gateway"
+                    }
+                ],
+                "privileged": false,
+                "parameters": [],
+                "forcePullImage": true
+              }
+          },
+          "env": {
+              "functions_provider_url": "http://faas-dcos.marathon.l4lb.thisdcos.directory:8080/",
+              "faas_prometheus_host": "faas-prometheus.marathon.l4lb.thisdcos.directory",
+              "faas_prometheus_port": "9090"
+          },
+          "healthChecks": [
+              {
+                "protocol": "HTTP",
+                "path": "/",
+                "portIndex": 0,
+                "timeoutSeconds": 10,
+                "gracePeriodSeconds": 10,
+                "intervalSeconds": 2,
+                "maxConsecutiveFailures": 10
+              }
+          ],
+          "labels": {
+              "HAPROXY_GROUP": "external"
+          }
+        },
+        {
+          "id": "/faas/core/faas-dcos",
+          "instances": 1,
+          "cpus": 0.5,
+          "mem": 128,
+          "container": {
+              "type": "DOCKER",
+              "volumes": [],
+              "docker": {
+                "image": "realbot/faas-dcos:0.1",
+                "network": "BRIDGE",
+                "portMappings": [
+                    {
+                        "containerPort": 8080,
+                        "hostPort": 0,
+                        "servicePort": 0,
+                        "protocol": "tcp",
+                        "name": "faas-dcos",
+                        "labels": {
+                          "VIP_0": "/faas-dcos:8080"
+                        }
+                    }
+                ],
+                "privileged": false,
+                "parameters": [],
+                "forcePullImage": true
+              }
+          },
+          "healthChecks": [
+              {
+                "protocol": "HTTP",
+                "path": "/health",
+                "portIndex": 0,
+                "timeoutSeconds": 10,
+                "gracePeriodSeconds": 10,
+                "intervalSeconds": 2,
+                "maxConsecutiveFailures": 10
+              }
+          ]
+      }
+      ]      
+    }
+  ]
+}
