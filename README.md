@@ -33,14 +33,14 @@ _OpenFaaS_ Interface should be now be available at `http://<public_node_address>
 
 You can now deploy functions using the web interface or [faas-cli](https://github.com/openfaas/faas-cli) by setting the _gateway_ to `http://<public_node_address>:10012`.
 
-For instance with these values:
+For instance you can try setting up a function with these values:
 ```
 image: functions/nodeinfo:latest  
 name: nodeinfo  
 handler: node main.js
 ```
 
-Once the function has been created you should see a new service running in DC/OS
+Once the function has been created, you should see a new service running in DC/OS
 
 ![Function running](docs/images/function.png?raw=true "Function running")
 
