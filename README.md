@@ -1,5 +1,5 @@
 # faas-dcos
-[DCOS](https://dcos.io/) plugin for [OpenFaas](https://github.com/openfaas/faas) 
+[DC/OS](https://dcos.io/) plugin for [OpenFaas](https://github.com/openfaas/faas) 
 
 ## Prerequisites: 
 1. a running DC/OS cluster accessible without authentication 
