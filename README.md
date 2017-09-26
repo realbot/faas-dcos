@@ -1,29 +1,52 @@
 # faas-dcos
-[DCOS](https://dcos.io/) plugin for [OpenFaas](https://github.com/alexellis/faas) 
+[DCOS](https://dcos.io/) plugin for [OpenFaas](https://github.com/openfaas/faas) 
 
 ## Prerequisites: 
-1. a running DCOS cluster accessible without authentication 
-1. an external [Marathon-LB](https://dcos.io/docs/1.9/networking/marathon-lb/) service running 
+1. a running DC/OS cluster accessible without authentication 
+1. an external [Marathon-LB](https://dcos.io/docs/1.9/networking/marathon-lb/) service running
+1. DC/OS CLI installed and configured
 
-Plugin has been tested with DCOS version 1.9.2.
+A quick way to have a local DCOS cluster running is https://github.com/dcos/dcos-vagrant. Do not forget to:
+1. add option ```oauth_enabled: 'false'``` in _etc/config-1.9.yaml_ config file to disable authentication 
+1. set environment variable ```export DCOS_VERSION=1.9.2``` in shell before running _vagrant up_.
 
-A quick way to have a cluster running is https://github.com/dcos/dcos-vagrant 
+Marathon-LB can be easily installed from DCOS Universe packages (the default configuration is okay, just click on INSTALL button):
+
+![Marathon-LB in Universe](docs/images/mlb.png?raw=true "Marathon-LB in Universe")
+
+DC/OS CLI installation instructions can be found [here](https://dcos.io/docs/1.9/cli/install/) or in the Dashboard top-left corner.
+
+Plugin has been tested with DC/OS version 1.9.2.
 
 ## Installation
-Install _OpenFaas_ components with:
+
+Once you have your cluster running, you can easily install _OpenFaas_ components. From _faas-dcos_ project root run the following command :
 ```
 dcos marathon group add faas-dcos.json
 ```
 
-After a few minutes, _OpenFaaS_ Interface should be available at `http://<public_node_address>:10012/ui/`.
+You should see services being deployed and, after a few minutes, you should have something like this:
 
-You can now deploy function with values:
+![OpenFaas running](docs/images/install.png?raw=true "OpenFaas running")
+
+_OpenFaaS_ Interface should be now be available at `http://<public_node_address>:10012/ui/` where _<public_node_address>_ is the cluster node accessible from outside, is the one running Marathon-LB by the way...
+
+You can now deploy functions using the web interface or [faas-cli](https://github.com/openfaas/faas-cli) by setting the _gateway_ to `http://<public_node_address>:10012`.
+
+For instance with these values:
 ```
 image: functions/nodeinfo:latest  
 name: nodeinfo  
 handler: node main.js
 ```
-or using _faas-cli_ by setting the _gateway_ at `http://<public_node_address>:10012`.
+
+Once the function has been created you should see a new service running in DC/OS
+
+![Function running](docs/images/function.png?raw=true "Function running")
+
+and it will be available to be executed
+
+![Function invoked](docs/images/invoke.png?raw=true "Function invoked")
 
 ## TODO
 1. Handle authentication and token expiration (see [#292](https://github.com/gambol99/go-marathon/issues/292))
