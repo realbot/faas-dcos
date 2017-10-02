@@ -45,8 +45,9 @@ provider:
 
 functions:
   nodeinfo:
-    handler: node main.js
+    fprocess: node main.js
     image: functions/nodeinfo:latest
+    skip_build: true
 ```
 Remember to set the _gateway_ to `http://<public_node_address>:10012`!
 
