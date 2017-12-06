@@ -2,28 +2,16 @@
 
 
 [[projects]]
-  name = "github.com/alexellis/faas"
-  packages = ["gateway/requests"]
-  revision = "5a58db2c5006695c2e1fa08f291513933b469e85"
-  version = "0.6.5"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/alexellis/faas-netes"
-  packages = ["types"]
-  revision = "b9d0dc6b3c170184a495ac901fea07b9124ba015"
-
-[[projects]]
   name = "github.com/alexellis/faas-provider"
   packages = ["types"]
-  revision = "98b7c6c060304be7d9dd2f2ba4855cc2cd68e9d3"
-  version = "0.2"
+  revision = "b9f261986a88ce62bbca20af2ff2dcf1d46a8df8"
+  version = "0.4"
 
 [[projects]]
   branch = "master"
   name = "github.com/donovanhide/eventsource"
   packages = ["."]
-  revision = "b8f31a59085e69dd2678cf51840db2ac625cb741"
+  revision = "3ed64d21fb0b6bd8b49bcfec08f3004daee8723d"
 
 [[projects]]
   name = "github.com/gambol99/go-marathon"
@@ -46,8 +34,26 @@
 [[projects]]
   name = "github.com/gorilla/mux"
   packages = ["."]
-  revision = "24fca303ac6da784b9e8269f724ddeb0b2eea5e7"
-  version = "v1.5.0"
+  revision = "7f08801859139f86dfafd1c296e2cba9a80d292e"
+  version = "v1.6.0"
+
+[[projects]]
+  name = "github.com/openfaas/faas"
+  packages = ["gateway/requests"]
+  revision = "aba3a8ca2d6796fdda0e2bd253a13b74fea475c8"
+  version = "0.6.13"
+
+[[projects]]
+  name = "github.com/openfaas/faas-netes"
+  packages = ["types"]
+  revision = "796214f38046f655421dbcf850af216358cf63c5"
+  version = "0.3.9"
+
+[[projects]]
+  name = "github.com/openfaas/faas-provider"
+  packages = ["types"]
+  revision = "b9f261986a88ce62bbca20af2ff2dcf1d46a8df8"
+  version = "0.4"
 
 [[projects]]
   name = "github.com/realbot/faas-provider"
@@ -58,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "693152c460fc65288b57a45699a58bd74e5822c6bcce1a0eb214a207a740d58c"
+  inputs-digest = "78a2b01ca9aa6a2330e8b3016bd118d318b36a81b91edc5dc8298867914bd58c"
   solver-name = "gps-cdcl"
   solver-version = 1

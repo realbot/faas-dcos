@@ -1,0 +1,12 @@
+provider:
+  name: faas
+  gateway: http://p1.dcos:10012
+
+functions:
+  nodeinfo:
+    fprocess: node main.js
+    image: functions/nodeinfo:latest
+    skip_build: true
+    labels:
+      com.openfaas.scale.min: "5"
+      com.openfaas.scale.max: "15"

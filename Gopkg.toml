@@ -27,7 +27,19 @@
 
 [[constraint]]
   name = "github.com/gorilla/mux"
-  version = "1.5.0"
+  version = "1.6.0"
+
+[[constraint]]
+  name = "github.com/openfaas/faas"
+  version = "0.6.13"
+
+[[constraint]]
+  name = "github.com/openfaas/faas-netes"
+  version = "0.3.9"
+
+[[constraint]]
+  name = "github.com/openfaas/faas-provider"
+  version = "0.4.0"
 
 [[constraint]]
   name = "github.com/realbot/faas-provider"

@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/alexellis/faas/gateway/requests"
 	marathon "github.com/gambol99/go-marathon"
+	"github.com/openfaas/faas/gateway/requests"
 )
 
 func getServiceList(client marathon.Marathon) ([]requests.Function, error) {

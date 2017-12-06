@@ -10,18 +10,24 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 
-	"github.com/alexellis/faas/gateway/requests"
+	"github.com/openfaas/faas/gateway/requests"
 
 	marathon "github.com/gambol99/go-marathon"
 )
+
+// initialReplicasCount how many replicas to start of creating for a function
+const initialReplicasCount = 1
 
 const functionNamespace string = "default"
 
 // ValidateDeployRequest validates that the service name is valid for Kubernetes
 func ValidateDeployRequest(request *requests.CreateFunctionRequest) error {
-	var validDNS = regexp.MustCompile(`^[a-zA-Z\-]+$`)
+	// Regex for RFC-1123 validation:
+	// 	k8s.io/kubernetes/pkg/util/validation/validation.go
+	var validDNS = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`)
 	matched := validDNS.MatchString(request.Service)
 	if matched {
 		return nil
@@ -68,6 +74,54 @@ func MakeDeployHandler(client marathon.Marathon) http.HandlerFunc {
 	}
 }
 
+// MakeUpdateHandler update specified function
+func MakeUpdateHandler(client marathon.Marathon) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
+		body, _ := ioutil.ReadAll(r.Body)
+
+		request := requests.CreateFunctionRequest{}
+		err := json.Unmarshal(body, &request)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		findApp, findAppErr := client.ApplicationBy(Function2ID(request.Service), nil)
+
+		if findAppErr != nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(findAppErr.Error()))
+			return
+		}
+
+		//...TO BE CONTINUED
+
+	}
+}
+
+/*
+
+
+	application := NewDockerApplication()
+	application.Name(fakeAppName)
+	id, err := endpoint.Client.UpdateApplication(application, force)
+
+*/
+
+/*
+readme
+
+* Upgraded to gateway:0.6.13
+* Set replica count on create/update from com.openfaas.scale.min label (see https://github.com/openfaas/faas-netes/pull/97)
+* Implemented Health handler
+* Implemented Update handler
+
+TODO
+* Secrets
+*/
+
 func reportError(w http.ResponseWriter, err error, application *marathon.Application) {
 	log.Printf("Failed to create application: %s, error: %s\n", application, err)
 	w.WriteHeader(http.StatusInternalServerError)
@@ -75,6 +129,14 @@ func reportError(w http.ResponseWriter, err error, application *marathon.Applica
 }
 
 func createApplicationRequest(request requests.CreateFunctionRequest) (application *marathon.Application) {
+	initialReplicas := initialReplicasCount
+
+	if request.Labels != nil {
+		if min := getMinReplicaCount(*request.Labels); min != 0 {
+			initialReplicas = min
+		}
+	}
+
 	pm := marathon.PortMapping{
 		ContainerPort: 8080,
 		HostPort:      0,
@@ -86,10 +148,15 @@ func createApplicationRequest(request requests.CreateFunctionRequest) (applicati
 	us.SetMinimumHealthCapacity(1.0)
 	us.SetMaximumOverCapacity(1.0)
 
-	application = marathon.NewDockerApplication().Name(Function2ID(request.Service)).Count(1).CPU(0.1).Memory(128)
+	application = marathon.NewDockerApplication().Name(Function2ID(request.Service)).Count(initialReplicas).CPU(0.1).Memory(128)
 	buildEnvVars(request, application)
 	application.SetUpgradeStrategy(*us)
 	application.AddLabel("faas_function", request.Service)
+	if request.Labels != nil {
+		for k, v := range *request.Labels {
+			application.AddLabel(k, v)
+		}
+	}
 	application.Container.Docker.
 		Container(request.Image).
 		SetForcePullImage(true).
@@ -113,4 +180,16 @@ func buildEnvVars(request requests.CreateFunctionRequest, application *marathon.
 			application.AddEnv(k, v)
 		}
 	}
+}
+
+func getMinReplicaCount(labels map[string]string) int {
+	if value, exists := labels["com.openfaas.scale.min"]; exists {
+		minReplicas, err := strconv.Atoi(value)
+		if err == nil && minReplicas > 0 {
+			return minReplicas
+		}
+		log.Println(err)
+	}
+
+	return 0
 }

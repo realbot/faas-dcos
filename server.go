@@ -5,14 +5,14 @@ package main
 
 import (
 	"log"
-	"time"
 
 	"github.com/realbot/faas-dcos/handlers"
+	"github.com/realbot/faas-provider"
 
 	// until health check is merged...
-	myboot "github.com/realbot/faas-provider"
+	bootTypes "github.com/realbot/faas-provider/types"
 
-	bootTypes "github.com/alexellis/faas-provider/types"
+	//bootTypes "github.com/openfaas/faas-provider/types"
 
 	marathon "github.com/gambol99/go-marathon"
 )
@@ -25,6 +25,14 @@ func main() {
 		log.Fatalf("Failed to create a client for marathon, error: %s", err)
 	}
 
+	readConfig := ReadConfig{}
+	osEnv := OsEnv{}
+	cfg := readConfig.Read(osEnv)
+
+	log.Printf("HTTP Read Timeout: %s\n", cfg.ReadTimeout)
+	log.Printf("HTTP Write Timeout: %s\n", cfg.WriteTimeout)
+	log.Printf("Function Readiness Probe Enabled: %v\n", cfg.EnableFunctionReadinessProbe)
+
 	bootstrapHandlers := bootTypes.FaaSHandlers{
 		FunctionProxy:  handlers.MakeProxy(),
 		DeleteHandler:  handlers.MakeDeleteHandler(client),
@@ -32,15 +40,18 @@ func main() {
 		FunctionReader: handlers.MakeFunctionReader(client),
 		ReplicaReader:  handlers.MakeReplicaReader(client),
 		ReplicaUpdater: handlers.MakeReplicaUpdater(client),
+		UpdateHandler:  handlers.MakeUpdateHandler(functionNamespace, clientset),
+		HealthHandler:  handlers.MakeHealthHandler(client),
 	}
+
 	var port int
 	port = 8080
 	bootstrapConfig := bootTypes.FaaSConfig{
-		ReadTimeout:  time.Second * 8,
-		WriteTimeout: time.Second * 8,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
 		TCPPort:      &port,
 	}
 
 	log.Println("Starting faas-dcos")
-	myboot.Serve(&bootstrapHandlers, &bootstrapConfig)
+	bootstrap.Serve(&bootstrapHandlers, &bootstrapConfig)
 }

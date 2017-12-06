@@ -10,10 +10,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/alexellis/faas-netes/types"
-	"github.com/alexellis/faas/gateway/requests"
 	marathon "github.com/gambol99/go-marathon"
 	"github.com/gorilla/mux"
+	"github.com/openfaas/faas-netes/types"
+	"github.com/openfaas/faas/gateway/requests"
 )
 
 // MakeReplicaUpdater updates desired count of replicas

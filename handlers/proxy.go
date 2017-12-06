@@ -35,9 +35,13 @@ func MakeProxy() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
+		if r.Body != nil {
+			defer r.Body.Close()
+		}
 
-		if r.Method == "POST" {
+		switch r.Method {
+		case http.MethodGet,
+			http.MethodPost:
 
 			vars := mux.Vars(r)
 			service := vars["name"]

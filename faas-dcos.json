@@ -101,7 +101,7 @@
               "type": "DOCKER",
               "volumes": [],
               "docker": {
-                "image": "functions/gateway:0.6.5",
+                "image": "functions/gateway:0.6.13",
                 "network": "BRIDGE",
                 "portMappings": [
                     {
@@ -146,7 +146,7 @@
               "type": "DOCKER",
               "volumes": [],
               "docker": {
-                "image": "realbot/faas-dcos:0.1",
+                "image": "realbot/faas-dcos:0.2",
                 "network": "BRIDGE",
                 "portMappings": [
                     {
@@ -168,7 +168,7 @@
           "healthChecks": [
               {
                 "protocol": "HTTP",
-                "path": "/health",
+                "path": "/healthz",
                 "portIndex": 0,
                 "timeoutSeconds": 10,
                 "gracePeriodSeconds": 10,
