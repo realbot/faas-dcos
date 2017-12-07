@@ -88,7 +88,7 @@ func MakeUpdateHandler(client marathon.Marathon) http.HandlerFunc {
 			return
 		}
 
-		findApp, findAppErr := client.ApplicationBy(Function2ID(request.Service), nil)
+		application, findAppErr := client.ApplicationBy(Function2ID(request.Service), nil)
 
 		if findAppErr != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -96,19 +96,36 @@ func MakeUpdateHandler(client marathon.Marathon) http.HandlerFunc {
 			return
 		}
 
-		//...TO BE CONTINUED
+		if application == nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("Function " + request.Service + " not found"))
+			return
+		}
 
+		initialReplicas := initialReplicasCount
+
+		if request.Labels != nil {
+			if min := getMinReplicaCount(*request.Labels); min != 0 {
+				initialReplicas = min
+			}
+		}
+
+		application.Count(initialReplicas)
+		application.Container.Docker.Container(request.Image)
+
+		buildEnvVars(request, application)
+		if request.Labels != nil {
+			for k, v := range *request.Labels {
+				application.AddLabel(k, v)
+			}
+		}
+
+		if _, err := client.UpdateApplication(application, false); err != nil {
+			reportError(w, err, application)
+			return
+		}
 	}
 }
-
-/*
-
-
-	application := NewDockerApplication()
-	application.Name(fakeAppName)
-	id, err := endpoint.Client.UpdateApplication(application, force)
-
-*/
 
 /*
 readme
