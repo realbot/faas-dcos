@@ -40,7 +40,7 @@ func main() {
 		FunctionReader: handlers.MakeFunctionReader(client),
 		ReplicaReader:  handlers.MakeReplicaReader(client),
 		ReplicaUpdater: handlers.MakeReplicaUpdater(client),
-		UpdateHandler:  handlers.MakeUpdateHandler(functionNamespace, clientset),
+		UpdateHandler:  handlers.MakeUpdateHandler(client),
 		HealthHandler:  handlers.MakeHealthHandler(client),
 	}
 

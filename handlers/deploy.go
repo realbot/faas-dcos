@@ -19,7 +19,8 @@ import (
 )
 
 // initialReplicasCount how many replicas to start of creating for a function
-const initialReplicasCount = 1
+const defaultInitialReplicasCount = 1
+const defaultMemoryRequirement = 128.0
 
 const functionNamespace string = "default"
 
@@ -102,16 +103,16 @@ func MakeUpdateHandler(client marathon.Marathon) http.HandlerFunc {
 			return
 		}
 
-		initialReplicas := initialReplicasCount
-
-		if request.Labels != nil {
-			if min := getMinReplicaCount(*request.Labels); min != 0 {
-				initialReplicas = min
-			}
-		}
+		initialReplicas := getInitialReplicas(request)
+		memoryRequirement := getMemoryRequirements(request)
 
 		application.Count(initialReplicas)
+		application.Memory(memoryRequirement)
 		application.Container.Docker.Container(request.Image)
+		application.Uris = nil
+		application.Fetch = nil
+		application.Version = ""
+		application.VersionInfo = nil
 
 		buildEnvVars(request, application)
 		if request.Labels != nil {
@@ -127,18 +128,6 @@ func MakeUpdateHandler(client marathon.Marathon) http.HandlerFunc {
 	}
 }
 
-/*
-readme
-
-* Upgraded to gateway:0.6.13
-* Set replica count on create/update from com.openfaas.scale.min label (see https://github.com/openfaas/faas-netes/pull/97)
-* Implemented Health handler
-* Implemented Update handler
-
-TODO
-* Secrets
-*/
-
 func reportError(w http.ResponseWriter, err error, application *marathon.Application) {
 	log.Printf("Failed to create application: %s, error: %s\n", application, err)
 	w.WriteHeader(http.StatusInternalServerError)
@@ -146,13 +135,8 @@ func reportError(w http.ResponseWriter, err error, application *marathon.Applica
 }
 
 func createApplicationRequest(request requests.CreateFunctionRequest) (application *marathon.Application) {
-	initialReplicas := initialReplicasCount
-
-	if request.Labels != nil {
-		if min := getMinReplicaCount(*request.Labels); min != 0 {
-			initialReplicas = min
-		}
-	}
+	initialReplicas := getInitialReplicas(request)
+	memoryRequirement := getMemoryRequirements(request)
 
 	pm := marathon.PortMapping{
 		ContainerPort: 8080,
@@ -161,13 +145,11 @@ func createApplicationRequest(request requests.CreateFunctionRequest) (applicati
 		Protocol:      "tcp"}
 	pm.AddLabel("VIP_0", "/"+Function2Endpoint(request.Service)+":8080")
 
-	us := &marathon.UpgradeStrategy{}
-	us.SetMinimumHealthCapacity(1.0)
-	us.SetMaximumOverCapacity(1.0)
-
-	application = marathon.NewDockerApplication().Name(Function2ID(request.Service)).Count(initialReplicas).CPU(0.1).Memory(128)
+	application = marathon.NewDockerApplication().Name(Function2ID(request.Service)).Count(initialReplicas).CPU(0.1).Memory(memoryRequirement)
 	buildEnvVars(request, application)
-	application.SetUpgradeStrategy(*us)
+	us := new(marathon.UpgradeStrategy)
+	application.SetUpgradeStrategy(us.SetMinimumHealthCapacity(1.0).SetMaximumOverCapacity(1.0))
+
 	application.AddLabel("faas_function", request.Service)
 	if request.Labels != nil {
 		for k, v := range *request.Labels {
@@ -199,6 +181,16 @@ func buildEnvVars(request requests.CreateFunctionRequest, application *marathon.
 	}
 }
 
+func getInitialReplicas(request requests.CreateFunctionRequest) int {
+	initialReplicas := defaultInitialReplicasCount
+	if request.Labels != nil {
+		if min := getMinReplicaCount(*request.Labels); min != 0 {
+			initialReplicas = min
+		}
+	}
+	return initialReplicas
+}
+
 func getMinReplicaCount(labels map[string]string) int {
 	if value, exists := labels["com.openfaas.scale.min"]; exists {
 		minReplicas, err := strconv.Atoi(value)
@@ -209,4 +201,17 @@ func getMinReplicaCount(labels map[string]string) int {
 	}
 
 	return 0
+}
+
+func getMemoryRequirements(request requests.CreateFunctionRequest) float64 {
+	memoryRequirement := defaultMemoryRequirement
+	if request.Requests != nil && len(request.Requests.Memory) > 0 {
+		qty, err := strconv.ParseFloat(request.Requests.Memory, 64)
+		if err != nil {
+			log.Println(err)
+		} else {
+			memoryRequirement = qty
+		}
+	}
+	return memoryRequirement
 }

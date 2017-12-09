@@ -14,7 +14,7 @@ Marathon-LB can be easily installed from DCOS Universe packages (the default con
 
 ![Marathon-LB in Universe](docs/images/mlb.png?raw=true "Marathon-LB in Universe")
 
-Plugin has been tested with DC/OS version 1.9.2.
+Plugin has been tested with DC/OS version 1.9.2, 1.9.4 and 1.10.2 .
 
 ## Installation
 

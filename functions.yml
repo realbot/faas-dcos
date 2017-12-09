@@ -1,6 +1,6 @@
 provider:
   name: faas
-  gateway: http://p1.dcos:10012
+  gateway: http://<public_node>:10012
 
 functions:
   nodeinfo:
@@ -10,3 +10,5 @@ functions:
     labels:
       com.openfaas.scale.min: "5"
       com.openfaas.scale.max: "15"
+    requests:
+      memory: 256

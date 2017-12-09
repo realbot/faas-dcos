@@ -6,6 +6,7 @@ package handlers
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net"
@@ -83,15 +84,8 @@ func MakeProxy() http.HandlerFunc {
 			clientHeader := w.Header()
 			copyHeaders(&clientHeader, &response.Header)
 
-			// TODO: copyHeaders removes the need for this line - test removal.
-			// Match header for strict services
-			w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
-
-			responseBody, _ := ioutil.ReadAll(response.Body)
-
 			writeHead(service, http.StatusOK, w)
-			w.Write(responseBody)
-
+			io.Copy(w, response.Body)
 		}
 	}
 }
@@ -101,10 +95,10 @@ func writeHead(service string, code int, w http.ResponseWriter) {
 }
 
 func copyHeaders(destination *http.Header, source *http.Header) {
-	for k, vv := range *source {
-		vvClone := make([]string, len(vv))
-		copy(vvClone, vv)
-		(*destination)[k] = vvClone
+	for k, v := range *source {
+		vClone := make([]string, len(v))
+		copy(vClone, v)
+		(*destination)[k] = vClone
 	}
 }
 
