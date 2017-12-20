@@ -1,13 +1,15 @@
 # faas-dcos
-[DC/OS](https://dcos.io/) plugin for [OpenFaas](https://github.com/openfaas/faas) 
+[DC/OS](https://dcos.io/) plugin for [OpenFaas](https://github.com/openfaas/faas)
 
-## Prerequisites: 
-1. a running DC/OS cluster accessible without authentication 
+A more recent blog post describing the installation process can be found here: https://medium.com/@realrealbot/openfaas-on-dcos-9d5927f4e725
+
+## Prerequisites:
+1. a running DC/OS cluster accessible without authentication
 1. an external [Marathon-LB](https://dcos.io/docs/1.9/networking/marathon-lb/) service running
 1. DC/OS CLI installed and configured (installation instructions can be found [here](https://dcos.io/docs/1.9/cli/install/) or in the Dashboard top-left corner)
 
 A quick way to have a local DCOS cluster running is https://github.com/dcos/dcos-vagrant. Do not forget to:
-1. add option ```oauth_enabled: 'false'``` in _etc/config-1.9.yaml_ config file to disable authentication 
+1. add option ```oauth_enabled: 'false'``` in _etc/config-1.9.yaml_ config file to disable authentication
 1. set environment variable ```export DCOS_VERSION=1.9.2``` in shell before running _vagrant up_.
 
 Marathon-LB can be easily installed from DCOS Universe packages (the default configuration is okay, just click on INSTALL button):
@@ -68,4 +70,3 @@ and it will be available to be executed
 ## TODO
 1. Handle authentication and token expiration (see [#292](https://github.com/gambol99/go-marathon/issues/292))
 1. Marathon 1.5 compatibility (remove go-marathon or [#324](https://github.com/gambol99/go-marathon/issues/324))
-1. Functions memory limits cannot be configured (see [faas#239](https://github.com/openfaas/faas/issues/239))
